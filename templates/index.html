@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Antibiotic Resistance Predictor</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+
+    <div class="header">
+      <div class="header-icon">Ab</div>
+      <h1>Antibiotic Resistance Predictor</h1>
+    </div>
+    <p class="subtitle">
+      Predict antibiotic resistance in <em>Pseudomonas aeruginosa</em> sputum isolates using cross-resistance patterns and patient demographics.
+    </p>
+
+    <nav>
+      <a href="/" class="active">Predict</a>
+      <a href="/model_comparison">Model Comparison</a>
+    </nav>
+
+    {% if meta %}
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;">
+      <span class="badge">Model <strong>{{ meta.best_model }}</strong></span>
+      <span class="badge">AUC <strong>{{ "%.3f"|format(meta.test_auc) }}</strong></span>
+      <span class="badge">Accuracy <strong>{{ "%.1f"|format(meta.test_accuracy * 100) }}%</strong></span>
+    </div>
+    {% endif %}
+
+    <!-- Single Prediction Form -->
+    <div class="card">
+      <h2>Resistance Prediction</h2>
+      <p class="card-desc">Select the target antibiotic, enter patient information, and provide any known susceptibility results to predict resistance probability.</p>
+
+      <form method="POST" action="/predict_clinical" id="clinical-form">
+
+        <!-- Target Antibiotic -->
+        <div class="target-select">
+          <label>Target Antibiotic to Predict</label>
+          <select name="target_antibiotic" required>
+            <option value="CEFEPIME">Cefepime</option>
+            <option value="CEFTAZIDIME">Ceftazidime</option>
+            <option value="IMIPENEM">Imipenem</option>
+            <option value="LEVOFLOXACIN">Levofloxacin</option>
+            <option value="MEROPENEM" selected>Meropenem</option>
+            <option value="PIPERACILIN+TAZOB.">Piperacillin / Tazobactam</option>
+            <option value="SIPROFLOKSASIN">Ciprofloxacin</option>
+          </select>
+        </div>
+
+        <!-- Patient Demographics -->
+        <div class="section-label">Patient Information</div>
+        <div class="form-row">
+          <div class="field">
+            <label>Age</label>
+            <input type="number" name="age" value="65" min="0" max="120" required>
+          </div>
+          <div class="field">
+            <label>Gender</label>
+            <select name="gender">
+              <option value="1">Male</option>
+              <option value="0">Female</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Patient Type</label>
+            <select name="inpatient">
+              <option value="1">Inpatient</option>
+              <option value="0">Outpatient</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Department</label>
+            <select name="department">
+              <option value="Pulmonary">Pulmonology</option>
+              <option value="ICU">Intensive Care Unit</option>
+              <option value="Oncology">Oncology</option>
+              <option value="Infectious">Infectious Diseases</option>
+              <option value="Pediatric">Pediatrics</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Known Antibiotic Results -->
+        <div class="section-label">Known Susceptibility Results (from antibiogram)</div>
+        <div class="abx-grid" id="abx-grid">
+          <div class="abx-item" data-abx="CEFEPIME">
+            <span class="abx-name">Cefepime</span>
+            <select name="result_CEFEPIME">
+              <option value="-1">Not tested</option>
+              <option value="0">Susceptible (S)</option>
+              <option value="1" selected>Intermediate (I)</option>
+              <option value="2">Resistant (R)</option>
+            </select>
+          </div>
+          <div class="abx-item" data-abx="CEFTAZIDIME">
+            <span class="abx-name">Ceftazidime</span>
+            <select name="result_CEFTAZIDIME">
+              <option value="-1">Not tested</option>
+              <option value="0">Susceptible (S)</option>
+              <option value="1" selected>Intermediate (I)</option>
+              <option value="2">Resistant (R)</option>
+            </select>
+          </div>
+          <div class="abx-item" data-abx="IMIPENEM">
+            <span class="abx-name">Imipenem</span>
+            <select name="result_IMIPENEM">
+              <option value="-1">Not tested</option>
+              <option value="0">Susceptible (S)</option>
+              <option value="1" selected>Intermediate (I)</option>
+              <option value="2">Resistant (R)</option>
+            </select>
+          </div>
+          <div class="abx-item" data-abx="LEVOFLOXACIN">
+            <span class="abx-name">Levofloxacin</span>
+            <select name="result_LEVOFLOXACIN">
+              <option value="-1">Not tested</option>
+              <option value="0">Susceptible (S)</option>
+              <option value="1" selected>Intermediate (I)</option>
+              <option value="2">Resistant (R)</option>
+            </select>
+          </div>
+          <div class="abx-item" data-abx="MEROPENEM">
+            <span class="abx-name">Meropenem</span>
+            <select name="result_MEROPENEM">
+              <option value="-1">Not tested</option>
+              <option value="0" selected>Susceptible (S)</option>
+              <option value="1">Intermediate (I)</option>
+              <option value="2">Resistant (R)</option>
+            </select>
+          </div>
+          <div class="abx-item" data-abx="PIPERACILIN+TAZOB.">
+            <span class="abx-name">Pip / Tazobactam</span>
+            <select name="result_PIPERACILIN+TAZOB.">
+              <option value="-1">Not tested</option>
+              <option value="0">Susceptible (S)</option>
+              <option value="1" selected>Intermediate (I)</option>
+              <option value="2">Resistant (R)</option>
+            </select>
+          </div>
+          <div class="abx-item" data-abx="SIPROFLOKSASIN">
+            <span class="abx-name">Ciprofloxacin</span>
+            <select name="result_SIPROFLOKSASIN">
+              <option value="-1">Not tested</option>
+              <option value="0">Susceptible (S)</option>
+              <option value="1" selected>Intermediate (I)</option>
+              <option value="2">Resistant (R)</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="btn primary full">Predict Resistance</button>
+      </form>
+    </div>
+
+    <!-- Batch Upload -->
+    <div class="card">
+      <h2>Batch Prediction</h2>
+      <p class="card-desc">Upload a CSV file for batch predictions. Include a <code>Label</code> column to see evaluation metrics.</p>
+      <form method="POST" action="/predict_batch" enctype="multipart/form-data">
+        <div class="file-input-wrap">
+          <input type="file" name="file" accept=".csv">
+        </div>
+        <button type="submit" class="btn">Upload & Predict</button>
+      </form>
+    </div>
+
+    {% if not model_ok %}
+    <div class="info-box warning">
+      Model not found at <code>model_artifacts/model.joblib</code>. Run the training pipeline first.
+    </div>
+    {% endif %}
+
+    <div class="footer">
+      Antibiotic Resistance Predictor &middot; <em>P. aeruginosa</em> sputum isolates &middot; 2020&ndash;2025 hospital data
+    </div>
+
+  </div>
+
+  <script>
+    // Disable the target antibiotic's result selector (it's what we're predicting)
+    const targetSelect = document.querySelector('select[name="target_antibiotic"]');
+    const abxGrid = document.getElementById('abx-grid');
+
+    function updateAbxGrid() {
+      const target = targetSelect.value;
+      abxGrid.querySelectorAll('.abx-item').forEach(item => {
+        const abx = item.dataset.abx;
+        const sel = item.querySelector('select');
+        if (abx === target) {
+          item.style.opacity = '0.35';
+          item.style.pointerEvents = 'none';
+          sel.value = '-1';
+        } else {
+          item.style.opacity = '1';
+          item.style.pointerEvents = 'auto';
+        }
+      });
+    }
+
+    targetSelect.addEventListener('change', updateAbxGrid);
+    updateAbxGrid();
+  </script>
+</body>
+</html>

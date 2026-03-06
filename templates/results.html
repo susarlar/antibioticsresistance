@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prediction Result</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+
+    <div class="header">
+      <div class="header-icon">Ab</div>
+      <h1>Antibiotic Resistance Predictor</h1>
+    </div>
+
+    <nav>
+      <a href="/">Predict</a>
+      <a href="/model_comparison">Model Comparison</a>
+    </nav>
+
+    {% if mode == "clinical" %}
+    <!-- Clinical single prediction result -->
+    <div class="result-card {% if pred == 1 %}resistant{% else %}non-resistant{% endif %}">
+      <div class="result-label">{{ target_antibiotic }} resistance prediction</div>
+      <div class="result-verdict">
+        {{ "RESISTANT" if pred == 1 else "NON-RESISTANT" }}
+      </div>
+      <div class="result-probability">
+        Resistance probability: <strong>{{ "%.1f"|format(proba * 100) }}%</strong>
+      </div>
+
+      <div class="prob-bar-wrap">
+        <div class="prob-bar">
+          <div class="prob-bar-fill {% if proba < 0.3 %}low{% elif proba < 0.6 %}medium{% else %}high{% endif %}"
+               style="width: {{ "%.1f"|format(proba * 100) }}%"></div>
+        </div>
+        <div class="prob-labels">
+          <span>0% (Susceptible)</span>
+          <span>50%</span>
+          <span>100% (Resistant)</span>
+        </div>
+      </div>
+    </div>
+
+    {% if patient_summary %}
+    <div class="card" style="margin-top: 16px;">
+      <h2>Patient Summary</h2>
+      <div class="kpi">
+        <div class="item">
+          <div class="label">Age</div>
+          <div class="value">{{ patient_summary.age }}</div>
+        </div>
+        <div class="item">
+          <div class="label">Gender</div>
+          <div class="value">{{ patient_summary.gender }}</div>
+        </div>
+        <div class="item">
+          <div class="label">Setting</div>
+          <div class="value">{{ patient_summary.setting }}</div>
+        </div>
+        <div class="item">
+          <div class="label">Department</div>
+          <div class="value">{{ patient_summary.department }}</div>
+        </div>
+      </div>
+
+      {% if patient_summary.known_results %}
+      <div class="section-label" style="margin-top:16px;">Known Susceptibility Results</div>
+      <div class="abx-grid">
+        {% for abx, result in patient_summary.known_results.items() %}
+        <div class="abx-item">
+          <span class="abx-name">{{ abx }}</span>
+          <span style="font-weight:700; color: {% if result == 'R' %}var(--danger){% elif result == 'S' %}var(--ok){% elif result == 'I' %}var(--warn){% else %}var(--muted){% endif %};">
+            {{ result }}
+          </span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="info-box info" style="margin-top:16px;">
+      This prediction is based on cross-resistance patterns from hospital antibiogram data (2020-2025).
+      It should support, not replace, clinical judgment and laboratory testing.
+    </div>
+
+    {% endif %}
+
+    {% if mode == "single" %}
+    <!-- Raw single prediction (legacy) -->
+    <div class="result-card {% if pred == 1 %}resistant{% else %}non-resistant{% endif %}">
+      <div class="result-label">Prediction</div>
+      <div class="result-verdict">
+        {{ "RESISTANT" if pred == 1 else "NON-RESISTANT" }}
+      </div>
+      <div class="result-probability">
+        Resistance probability: <strong>{{ "%.1f"|format(proba * 100) }}%</strong>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if mode == "batch" %}
+    {% if metrics %}
+    <div class="card">
+      <h2>Evaluation Metrics</h2>
+      {% if metrics.error %}
+      <div class="info-box warning">{{ metrics.error }}</div>
+      {% else %}
+      <div class="kpi">
+        <div class="item">
+          <div class="label">ROC-AUC</div>
+          <div class="value {% if metrics.auc >= 0.8 %}ok{% elif metrics.auc >= 0.6 %}warn{% else %}bad{% endif %}">
+            {{ "%.4f"|format(metrics.auc) }}
+          </div>
+        </div>
+        <div class="item">
+          <div class="label">Accuracy</div>
+          <div class="value {% if metrics.accuracy >= 0.8 %}ok{% elif metrics.accuracy >= 0.6 %}warn{% else %}bad{% endif %}">
+            {{ "%.1f"|format(metrics.accuracy * 100) }}%
+          </div>
+        </div>
+      </div>
+
+      {% if visualizations %}
+        {% if visualizations.confusion_matrix %}
+        <div class="visualization">
+          <img src="{{ visualizations.confusion_matrix }}" alt="Confusion Matrix">
+        </div>
+        {% endif %}
+        {% if visualizations.roc_curve %}
+        <div class="visualization">
+          <img src="{{ visualizations.roc_curve }}" alt="ROC Curve">
+        </div>
+        {% endif %}
+        {% if visualizations.prob_distribution %}
+        <div class="visualization">
+          <img src="{{ visualizations.prob_distribution }}" alt="Probability Distribution">
+        </div>
+        {% endif %}
+      {% endif %}
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {% if table %}
+    <div class="card">
+      <h2>Predictions Preview (first 50 rows)</h2>
+      <div class="table-wrap">
+        {{ table|safe }}
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <div style="margin-top: 24px;">
+      <a href="/" class="btn">New Prediction</a>
+    </div>
+
+    <div class="footer">
+      Antibiotic Resistance Predictor &middot; <em>P. aeruginosa</em> sputum isolates &middot; 2020&ndash;2025 hospital data
+    </div>
+
+  </div>
+</body>
+</html>

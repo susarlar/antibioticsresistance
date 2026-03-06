@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Model Comparison</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+
+    <div class="header">
+      <div class="header-icon">Ab</div>
+      <h1>Antibiotic Resistance Predictor</h1>
+    </div>
+
+    <nav>
+      <a href="/">Predict</a>
+      <a href="/model_comparison" class="active">Model Comparison</a>
+    </nav>
+
+    {% if meta %}
+    <div class="card">
+      <h2>Production Model</h2>
+      <div class="kpi">
+        <div class="item">
+          <div class="label">Selected Model</div>
+          <div class="value">{{ meta.best_model }}</div>
+        </div>
+        <div class="item">
+          <div class="label">Test AUC</div>
+          <div class="value ok">{{ "%.4f"|format(meta.test_auc) }}</div>
+        </div>
+        <div class="item">
+          <div class="label">Test Accuracy</div>
+          <div class="value ok">{{ "%.1f"|format(meta.test_accuracy * 100) }}%</div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if visualizations and visualizations.cv_comparison %}
+    <div class="card">
+      <h2>Cross-Validation Performance</h2>
+      <p class="card-desc">10-fold stratified cross-validation on the 80% training set.</p>
+      <div class="visualization">
+        <img src="{{ visualizations.cv_comparison }}" alt="CV Comparison">
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="card">
+      <h2>Detailed Results</h2>
+      <p class="card-desc">Mean and standard deviation across 10 cross-validation folds. The best model is selected by highest mean AUC and used for predictions.</p>
+      <div class="table-wrap">
+        {{ cv_table|safe }}
+      </div>
+    </div>
+
+    <div class="footer">
+      Antibiotic Resistance Predictor &middot; <em>P. aeruginosa</em> sputum isolates &middot; 2020&ndash;2025 hospital data
+    </div>
+
+  </div>
+</body>
+</html>

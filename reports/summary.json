@@ -1,0 +1,50 @@
+{
+  "selected_by": "highest_mean_cv_auc",
+  "best_model": "RandomForest",
+  "cv_table_path": "reports/model_comparison.csv",
+  "test_metrics": {
+    "seed": 42,
+    "target": "Label",
+    "feature_columns": [
+      "Age",
+      "Gender",
+      "Inpatient",
+      "Year",
+      "Month",
+      "Dept_ICU",
+      "Dept_Infectious",
+      "Dept_Oncology",
+      "Dept_Other",
+      "Dept_Pediatric",
+      "Dept_Pulmonary",
+      "Target_CEFEPIME",
+      "Target_CEFTAZIDIME",
+      "Target_IMIPENEM",
+      "Target_LEVOFLOXACIN",
+      "Target_MEROPENEM",
+      "Target_PIPERACILIN_TAZOB",
+      "Target_SIPROFLOKSASIN",
+      "CEFTAZIDIME_result",
+      "IMIPENEM_result",
+      "LEVOFLOXACIN_result",
+      "MEROPENEM_result",
+      "PIPERACILIN_TAZOB_result",
+      "SIPROFLOKSASIN_result",
+      "CEFEPIME_result"
+    ],
+    "best_model": "RandomForest",
+    "test_auc": 0.8946144590067969,
+    "test_accuracy": 0.855072463768116,
+    "confusion_matrix": [
+      [
+        299,
+        18
+      ],
+      [
+        42,
+        55
+      ]
+    ],
+    "threshold": 0.5
+  }
+}
