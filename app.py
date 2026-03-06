@@ -6,8 +6,6 @@ import pandas as pd
 import numpy as np
 from flask import Flask, render_template, request, jsonify
 from sklearn.metrics import roc_auc_score, accuracy_score, confusion_matrix, roc_curve
-from sklearn.model_selection import StratifiedKFold
-from sklearn.pipeline import Pipeline
 import matplotlib
 matplotlib.use('Agg')  # Non-interactive backend for server
 import matplotlib.pyplot as plt
